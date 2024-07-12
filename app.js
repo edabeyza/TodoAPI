@@ -23,7 +23,7 @@ require('express-async-errors')
 // SEQUELIZE: 
 // npm i sequelize sqlite3
 
-const { Sequelize, DataTypes} = require('sequelize')
+const { Sequelize, DataTypes, where} = require('sequelize')
 
 // Connection Object:
 const sequelize = new Sequelize('sqlite:' + (process.env.SQLITE || '.db.sqlite3')) 
@@ -121,6 +121,67 @@ router.post('/', async (req, res) => {
         error: false,
         result: data.dataValues,
     })
+})
+
+// READ TODO:
+router.get('/:id', async (req, res) => {
+    
+        // const data = await Todo.findOne({where:   { id: req.params.id }})
+        const data = await Todo.findByPk(req.params.id)
+
+        res.status(200).send({
+            error: false,
+            result: data,
+        })
+})
+
+// UPDATE TODO:
+router.put('/:id', async (req, res) => {
+    
+    // const data = await Todo.update({ ...newData }, { ...filter} )
+    const data = await Todo.update(req.body, { where: { id: req.params.id } })
+
+    res.status(202).send({
+        error: false,
+        result: data,
+        message: (data[0]>=1 ? 'Updated.' : 'Not Updated.'),
+        new: await Todo.findByPk(req.params.id) // Güncelleniş datayı gönder.
+    })
+    console.log(data)
+})
+
+// DELETE TODO:
+router.delete('/:id', async (req, res) => {
+    
+    // const data = await Todo.destroy({ ...filter })
+    const data = await Todo.destroy({ where: { id: req.params.id } })
+    // console.log(data)
+
+    // res.status(204).send({
+    //     error: false,
+    //     result: data,
+    //     message: (data>=1 ? 'Deleted.' : 'Not Deleted.'),
+    // })
+
+    if(data >= 1) {
+
+        // Sadece status code çıktısı verir.
+        res.sendStatus(204)
+
+    } else {
+
+        // res.status(404).send({
+        //     error: false,
+        //     result: data,
+        //     message: 'Not Deleted.',
+        // })
+
+        // send to ErrorHandler:
+        res.errorStatusCode = 404
+        throw new Error('Not Deleted.') 
+7
+
+    }
 })
 
 app.use(router)
