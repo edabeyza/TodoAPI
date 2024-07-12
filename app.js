@@ -13,10 +13,12 @@ const PORT = process.env.PORT || 8000; // port numarasını okumak için
 // Accept json data convert to object:
 app.use(express.json()); // json veri kabul etmek için 
 
-app.all('/', (req, res) => {
-    res.send('WELCOME TO TODO API')
-})
+// app.all('/', (req, res) => {
+//     res.send('WELCOME TO TODO API')
+// })
 
+// Async errors to ErrorHandler:
+require('express-async-errors')
 /* ------------------------------------------- */
 // SEQUELIZE: 
 // npm i sequelize sqlite3
@@ -79,7 +81,49 @@ const Todo = sequelize.define('todos', {
     sequelize.authenticate()
         .then(() => console.log('* DB Connected. *'))
         .catch(() => console.log('* DB Not Connected: *'))
+
 /* ------------------------------------------- */
+// ROUTES:
+
+const router = express.Router()
+
+// LIST TODOS:
+
+router.get('/', async (req, res) => {
+
+    const data = await Todo.findAndCountAll()
+    res.status(200).send({
+        error: false,
+        result: data,
+    })
+})
+
+// CRUD: Create, Read, Update, Delete
+
+// CREATE TODO:
+router.post('/', async (req, res) => {
+    
+    const receivedData = req.body // Data from client
+    // console.log(receivedData)
+
+    // const data = await Todo.create({
+    //     title: receivedData.title,
+    //     description: receivedData.description,
+    //     priority: receivedData.priority,
+    //     isDone: receivedData.isDone,
+    // })
+    // console.log(data)
+
+    const data = await Todo.create(req.body)
+    // console.log(data)
+
+    res.status(201).send({
+        error: false,
+        result: data.dataValues,
+    })
+})
+
+app.use(router)
 /* ------------------------------------------- */
 /* ------------------------------------------- */
 /* ------------------------------------------- */
